@@ -1,0 +1,111 @@
+@model IList<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+@{
+    ViewData["Title"] = "Home Page";
+    Layout = "_LayoutNew";
+}
+
+<div class="row">
+   <div class="col-md-2"></div>
+   <div class="col-md-8">
+    <a href="/product">Back to Product List</a>
+      <h4 class="mb-3">Add New Product</h4>
+      <form class="needs-validation" id="myform">
+         <div class="row">
+            <div class="col-md-5 mb-3">
+               <label for="productname">Product name</label>
+               <input type="text" class="form-control" id="productname" name="productname" placeholder="Product Name" value="">
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-md-5 mb-3">
+               <label for="productdescription">Product Description</label>
+               <input type="text" class="form-control" id="productdescription" name="productdescription" placeholder="Product Description" value="">
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-md-5 mb-3">
+               <label for="country">Product Category</label>
+               
+
+            <select class="custom-select d-block w-100" id="category" name="category" asp-items="Model">
+                <option value="0">Please select category</option>
+            </select> 
+
+               @* <select class="custom-select d-block w-100" id="category" name="category" required>
+                  <option value="">Choose...</option>
+                  <option value="1">United States</option>
+                  <option value="2">Second Item</option>
+               </select> *@
+               <div class="invalid-feedback">
+                  Please select a valid country.
+               </div>
+            </div>
+         </div>
+         <hr class="mb-4">
+         <div id="attributescollection">
+         </div>
+         <hr class="mb-4">
+         <button class="btn btn-primary btn-lg btn-block" type="button" id="btnSubmit">Create Product</button>
+      </form>
+   </div>
+</div>
+
+@section Scripts{
+
+    <script>
+        $(document).ready(function(){
+
+            $("#category").change(function() {
+                var categoryId = $(this).val();
+                $("#attributescollection").empty();
+
+                $.get("/attributes/getbycategory/" + categoryId, function(data){
+                    for(var i=0; i<data.length; i++){
+                        $("#attributescollection").append('<div class="row"><div class="col-md-5 mb-3"><label>' + data[i].attributeName + '</label><input type="text" class="form-control" id="attribute[' + i + ']" value="" name="attribute[' + i + ']" ecommerce-id="' + data[i].attributeId + '"></div></div>');
+                    }
+                });
+            });
+            
+            $("#btnSubmit").click(function(){
+                var payload = {};
+
+                if($("#productname").val() == ''){
+                    alert("Product Name can't be empty.");
+                    return;
+                }
+                if($("#category").val() == '' || $("#category").val() == '0'){
+                    alert("Category can't be empty.");
+                    return;
+                }
+
+                payload.productName = $("#productname").val();
+                payload.productDescription = $("#productdescription").val();
+                payload.categoryId = $("#category").val();
+                payload.attributes = [];
+
+                var fields = $("#myform input[name^='attribute']").each(function(index){
+                    var a = $(this);
+
+                    var attributeItem = {};
+                    attributeItem.attributeId = a.attr("ecommerce-id");
+                    attributeItem.attributeValue = a.val();
+
+                    payload.attributes.push(attributeItem);
+                });
+                
+                $.ajax({
+                    type: "POST",
+                    url: "/product/createProduct/",
+                    dataType: "application/json",
+                    data: payload,
+                    complete: function(d){
+                        console.log(d);
+                        alert("Product saved succesfully.");
+                        window.location.reload();
+                    }
+                    
+                });
+            });
+        });
+    </script>
+}

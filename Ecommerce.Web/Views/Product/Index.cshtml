@@ -1,0 +1,72 @@
+@model int
+@{
+    ViewData["Title"] = "Home Page";
+    Layout = "_LayoutNew";
+}
+<div class="row">
+   <div class="col-md-2"></div>
+   <div class="col-md-8">
+      <h4 class="mb-3">Products Listing Page</h4>
+      <br/>
+      <a href="/product/createProduct">Create New Product</a>
+      <table class="table table-striped table-sm" id="productGrid">
+         <thead>
+            <tr>
+               <th>Id</th>
+               <th>Name</th>
+               <th>Description</th>
+               <th>Category</th>
+               <th>Action</th>
+            </tr>
+         </thead>
+         <tbody>
+            
+         </tbody>
+      </table>
+      <div  class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                </ul>
+            </nav>
+        </div>
+        <div class="col-md-2"></div>
+      </div>
+   </div>
+</div>
+
+@section Scripts{
+
+    <script>
+
+        var pageSize = 5;
+        var totalCount = @Model;
+       
+        $(document).ready(function(){
+            reloadGrid(1);            
+            reloadPagination();
+        });
+
+        function reloadPagination(){
+            $(".pagination").empty();
+
+            var totalPages = Math.ceil(totalCount/pageSize);
+            for(var i=1; i<=totalPages; i++){
+                $(".pagination").append('<li class="page-item"><a class="page-link" onclick="reloadGrid(' + i + ')">' + i + '</a></li>');
+            }
+
+        }
+
+        function reloadGrid(currentPage){
+            $("#productGrid tbody").empty();
+
+            $.get("/product/getProducts?pageSize="+ pageSize +"&currentPage=" + currentPage, function(data){
+                
+                for(var i=0; i<data.length; i++){
+                    $("#productGrid").append('<tr><td>' + data[i].productId +'</td><td>' + data[i].productName +'</td><td>' + data[i].productDescription +'</td><td>' + data[i].categoryName +'</td><td><a href="/product/edit/' +  data[i].productId + '">Edit</a></td></tr>');
+                }
+            });
+        }
+    </script>
+}
